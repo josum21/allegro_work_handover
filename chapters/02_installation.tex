@@ -1,0 +1,44 @@
+\section{Installation and communication checks}
+\label{sec:installation}
+\subsection{Acquisition environment}
+The historical installation note describes Windows 10 with a Keysight 82357B USB--GPIB adapter. It uses Keysight IO Libraries Suite, installing the prerequisite package before the main package when supplied separately. The optional NI route uses NI Package Manager to install NI-VISA and NI System Configuration, including Measurement \& Automation Explorer (MAX).
+
+Treat this as a record of the previous setup. Select installer versions compatible with the actual PC and adapter, and record the working combination rather than assuming that a newer release reproduces it. Useful vendor entry points are \href{https://www.keysight.com/us/en/lib/software-detail/computer-software/io-libraries-suite-downloads-2175637.html}{Keysight IO Libraries Suite} and \href{https://www.ni.com/en/support/downloads/software-products/download.package-manager.html}{NI Package Manager}. These links were carried over from the installation note and were not checked for current instructions.
+\todo{Record Windows, MATLAB, VISA provider and driver versions from the working instrument PC. Confirm whether NI software is needed and document any coexistence settings. The old note's MATLAB platform-support statement needs current verification.}
+
+\subsection{Verify communication before running a scan}
+Connect the instruments and check that they appear in Keysight Connection Expert (or the installed equivalent). Use the instrument's interactive I/O facility to query its identity with \code{*IDN?}, where supported. Confirm that the returned identity corresponds to the connected matrix or scope.
+
+The old installation note demonstrates GPIB communication with an HP 6624A supply using \code{VSET 1 2} and \code{VOUT? 1}. These are supply-specific examples, not commands for the PCB multiplexer or oscilloscope.
+
+In MATLAB, enumerate the available resources:
+\begin{lstlisting}
+resources = visadevlist;
+disp(resources)
+% Example only: replace with the resource reported on this PC.
+scope = visadev('USB0::0x0AAD::0x01D6::105097::0::INSTR');
+identity = strtrim(writeread(scope, '*IDN?'));
+clear scope
+\end{lstlisting}
+Use the reported resource names in the acquisition entry scripts. Do not select an instrument by its row number in \code{visadevlist}: enumeration order can change. Close exploratory connections before handing the same resource to a script.
+
+The current scripts contain example resources \code{GPIB0::7::INSTR} for the matrix and \code{USB0::0x0AAD::0x01D6::105097::0::INSTR} for the scope. Neither should be assumed to match another PC. The optional \code{matrixIdContains} and \code{scopeIdContains} settings can enforce expected identity text; empty strings disable those checks.
+
+\subsection{MATLAB dependencies and path}
+\begin{tabularx}{\linewidth}{@{}lX@{}}
+\toprule
+Task & Dependency \\
+\midrule
+Acquisition & Instrument Control Toolbox and working VISA connections. \\
+Cross-talk shaping & Control System Toolbox. \\
+Cross-talk study plots & Signal Processing Toolbox, in addition to shaping dependencies. \\
+Capacitance waveform fitting & Optimization Toolbox. \\
+\bottomrule
+\end{tabularx}
+
+Keep the five \code{run_*.m} scripts and the \code{+pcbtest} package together. Each entry script adds the toolkit root to the current MATLAB session without changing the saved path. For direct function calls:
+\begin{lstlisting}
+addpath('path/to/pcb_test_toolkit');
+cfg = pcbtest.default_config(4);
+\end{lstlisting}
+\todo{Record the tested MATLAB release and toolbox versions. Confirm access to the toolkit repository or shared archive for the next operator.}

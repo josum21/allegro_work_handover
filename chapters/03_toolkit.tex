@@ -1,0 +1,47 @@
+\section{Toolkit and data organisation}
+\label{sec:toolkit}
+\subsection{Entry points}
+\begin{tabularx}{\linewidth}{@{}lX@{}}
+\toprule
+Script & Purpose \\
+\midrule
+\code{run_acquire_debug.m} & One injection/readout pair; saving disabled by default. \\
+\code{run_acquire_xtalk.m} & One tower's complete $15\times15$ cross-talk scan. \\
+\code{run_acquire_capacity.m} & One tower's 15 capacitance waveforms; also used for T0. \\
+\code{run_offline_xtalk.m} & Cross-talk analysis for a list of towers. \\
+\code{run_offline_capacity.m} & Capacitance analysis relative to T0. \\
+\bottomrule
+\end{tabularx}
+
+\code{+pcbtest/default_config.m} defines shared settings and channel maps. Entry scripts override selected fields, so the settings at the top of the chosen script are part of the measurement configuration. For example, the current cross-talk script uses ranges 5, 0.3 and 0.1, whereas the shared defaults use 5, 0.15 and 0.08.
+
+\subsection{Parameters to set for each campaign}
+Before acquisition, check \code{tower}, \code{dataRoot}, \code{datasetLabel}, the two VISA resource names, CH2 settings and \code{skipExistingFiles}. Set identity checks where practical. For offline analysis, set \code{towers}, \code{dataDir}, \code{datasetLabel}, \code{outputLabel} and \code{towerSubfolders}. The cross-talk script also exposes \code{shapingTimes} and \code{studyCells}.
+
+The current acquisition and offline cross-talk scripts both use \code{data/xtalk_run_001}. The README's acquisition example mentions \code{xtalk_run_003}; use the actual configured path. Prefer a fresh campaign directory when changing the setup.
+
+\subsection{Raw waveform files}
+A typical campaign is organised as follows:
+\begin{lstlisting}
+pcb_test_toolkit/
+  +pcbtest/
+  run_acquire_xtalk.m
+  ...
+  data/
+    xtalk_run_001/T4/T4_xtalk_PCBCHINA_01-02.mat
+    capacity_run_001/T0/T0_Capacity_PCBCHINA_1.mat
+    capacity_run_001/T4/T4_Capacity_PCBCHINA_1.mat
+  output/
+    PCBCHINA/xtalk/T4/
+    PCBCHINA/capacity/T4/
+\end{lstlisting}
+In a cross-talk filename, the first two-digit number is the injection channel and the second is the readout channel. Capacitance filenames use an unpadded channel number. Cross-talk files contain \code{t} in seconds and \code{data} in volts; capacitance files contain \code{t} and \code{data_read}. New acquisitions also save \code{metadata} with acquisition time, tower, channel information, instrument identities and the applied CH2 vertical settings.
+
+The metadata is not a complete record of the bench: generator parameters, scope trigger, timebase, actual tower wiring and toolkit revision are not saved by these acquisition functions. Record them separately. Debug acquisition with \code{applyScopeSettings = false} saves no numerical front-panel vertical settings.
+
+\subsection{Existing files and interrupted scans}
+With \code{skipExistingFiles = true}, the script loads each existing waveform and checks its metadata against the selected channels, tower, readout scope channel, vertical settings and instrument identities. A mismatch stops the scan. Historical files without matching metadata cannot be resumed this way.
+
+With \code{skipExistingFiles = false}, matching filenames are acquired again and overwritten. The current cross-talk entry script uses \code{false}; the capacitance script uses \code{true}. Metadata matching does not verify unsaved settings such as generator amplitude or trigger configuration. Resume only after confirming those independently.
+
+The toolkit ignores the entire \code{output/} directory in Git. Keep raw data, configuration records and analysis outputs in the laboratory's chosen archive; a code checkout alone does not preserve the measurement.

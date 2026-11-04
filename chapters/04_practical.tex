@@ -1,0 +1,66 @@
+\section{Practical procedure at the bench}
+\label{sec:practical}
+\subsection{Prepare the measurement}
+\begin{enumerate}
+\item Identify the board, tower and measurement type. Start a campaign record using Section~\ref{sec:record} and select a new data directory.
+\item Connect the chosen tower using the verified connector orientation. Check the reference and readout paths against the wiring diagram.
+\item Set the generator, scope inputs, horizontal acquisition settings and trigger for the measurement. Confirm the direct generator reference on CH1.
+\item Verify both VISA resources and their identities as described in Section~\ref{sec:installation}.
+\end{enumerate}
+\todo{Complete the exact connection and power/output sequence, with photographs showing connector orientation. Add separate validated generator and scope presets for cross-talk and capacitance. Until those details are added, this is an outline rather than a complete standalone bench procedure.}
+
+\subsection{Inspect one pair before a scan}
+Open \code{run_acquire_debug.m}. Set the tower, injection channel, readout channel and VISA resources. Use a diagonal pair first, then inspect an adjacent-number pair and another off-diagonal pair to assess the three cross-talk presets.
+
+With \code{applyScopeSettings = true}, the script sends its position, range and offset to CH2. With \code{false}, it keeps the front-panel vertical settings. Its default is \code{true}; the current debug values are not automatically matched to the cross-talk presets. Set \code{saveWaveform = true} if the diagnostic waveform should be preserved.
+
+Run the script. It starts immediately without a confirmation prompt, routes one pair, requests \code{SING}, waits for \code{*OPC?} to return \code{1}, waits the configured read delay and reads CH2. The matrix receives the cleanup command \code{C} on normal exit or error cleanup. The captured waveform remains available for inspection on the scope.
+
+Check that the trigger is stable, the waveform is not clipped, and the time window contains the baseline and relevant response. For capacitance, check that the positive rising waveform and its approach to the plateau are captured. For cross-talk, inspect the small off-diagonal signals at their intended scales.
+\placeholder{Insert diagonal, off-diagonal and capacitance waveform examples.}{Representative successful acquisitions, with timebase, vertical settings and channel pair recorded. Add examples of clipping and incorrect triggering for comparison.}
+\todo{Add expected waveform polarity, approximate amplitudes and timescales, baseline/noise examples, and the laboratory's acceptance criteria. These cannot be inferred reliably from the software alone.}
+
+\subsection{Acquire cross-talk}
+\begin{enumerate}
+\item In \code{run_acquire_xtalk.m}, set the connected tower, campaign directory and dataset label. Check all three CH2 presets and the overwrite/resume switch.
+\item For an initial trial, use a separate data directory and change \code{cfg.channels = 1:2}. This creates four pair files. Inspect them before the full scan; the offline matrix analysis requires all 225 pairs and cannot analyse the trial alone.
+\item Restore \code{cfg.channels = 1:15}, choose the full-run directory and run the script. Confirm the displayed tower by pressing Enter, or type \code{q} to stop.
+\item Follow the saved-file messages. A full scan has 225 expected filenames. Check filename coverage and representative waveforms after completion; the count alone does not prove that the physical tower was correct.
+\item To scan another tower, change the physical connection, update \code{tower}, verify the setup again and rerun the script.
+\end{enumerate}
+The current script uses a 0.5-second delay after confirmed acquisition and before waveform readout. The shared pre-acquisition settling default is zero. These are software settings, not a validated settling-time study.
+
+\subsection{Acquire capacitance and T0}
+\begin{enumerate}
+\item Configure the capacitance excitation and scope settings. Connect T0 and set \code{tower = 0} in \code{run_acquire_capacity.m}.
+\item Choose the capacitance campaign directory and dataset label. Check the CH2 range and the overwrite/resume switch. The shared position and offset are $-4$ and 0; the entry script's range is 2.
+\item Run the script and confirm the T0 connection. It routes injection and readout to each channel in turn and saves 15 files.
+\item Connect a measurement tower, update \code{tower}, and acquire its 15 files under the same campaign root and dataset label. Record any changes to the setup between T0 and the tower.
+\end{enumerate}
+The capacitance scan waits 2 seconds after routing/configuration and 1 second after confirmed acquisition before readout, using the current defaults. Fitting is performed offline.
+\todo{Specify when T0 should be remeasured, how reference stability is checked, and how to handle a setup change during a campaign. Explain the physical reference subtraction.}
+
+\subsection{Run offline analysis and archive}
+Copy the raw campaign directory and the measurement record to the offline computer. For cross-talk, set \code{run_offline_xtalk.m} to the campaign root and tower list. The current shaping times are 20, 50 and 200 ns; setting \code{studyCells = []} skips the study plots. Keep \code{towerSubfolders = true} for the toolkit's directory layout.
+
+For capacitance, point \code{run_offline_capacity.m} to the common directory containing T0 and the measurement towers. Exclude T0 from \code{towers}: it is loaded as the reference. Its fitted tau array is reused across towers during the script run. Choose a distinct \code{outputLabel} when retaining multiple analyses.
+
+Review plots, numerical exports and warnings using Section~\ref{sec:analysis}. Archive the raw files, the exact edited entry scripts, toolkit revision, setup record, reference dataset and analysis outputs together.
+
+\subsection{Troubleshooting guide}
+The checks below are diagnostic starting points, not an established list of failure causes.
+\begin{longtable}{@{}p{0.30\linewidth}p{0.65\linewidth}@{}}
+\toprule
+Observation & Check or next action \\
+\midrule
+\endhead
+Instrument missing & Check physical connection and vendor discovery first; then check MATLAB's resource list and the selected VISA installation. \\
+No acquisition completion & Inspect trigger source, level and whether a trigger is actually arriving. Record the instrument response and MATLAB error. \\
+Unexpected or clipped waveform & Check the selected pair, physical routing, input settings, and the complete CH2 preset. Compare with a saved known-good trace. \\
+Existing-file mismatch & Compare metadata and campaign settings. Use a new directory for a changed setup; overwriting replaces earlier measurements. \\
+Cross-talk analysis stops & Check all 225 filenames, the dataset label and the reported malformed or mismatched-time-axis file. \\
+Capacitance channel is NaN & Inspect both tower and T0 waveforms for that channel, threshold crossing, fit convergence and the acquisition window. \\
+Plot disagrees with board label & Translate acquisition channel, display position and study cell through the appropriate maps. \\
+\bottomrule
+\end{longtable}
+\todo{Add actual recurring bench problems and their confirmed fixes, preferably with example traces and instrument messages.}

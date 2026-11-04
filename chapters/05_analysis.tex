@@ -1,0 +1,61 @@
+\section{Analysis definitions and interpretation}
+\label{sec:analysis}
+\subsection{Cross-talk shaping and amplitudes}
+Each waveform is baseline-corrected by subtracting the mean of its first 10\% of samples, using the configured baseline fraction. The software discretises
+\begin{equation}
+ H(s)=\frac{\tau s}{(\tau s+1)^3}
+\end{equation}
+with Tustin's method at the waveform sample interval and applies the resulting filter. Here $\tau$ is the configured shaping parameter.
+
+Let $v_{ij}^{\mathrm{sh}}(t)$ denote the shaped waveform for injection $i$ and readout $j$. The exported amplitudes are
+\begin{align}
+ M_{ij}&=\max_t\left|v_{ij}^{\mathrm{sh}}(t)\right|,\\
+ P_{ij}&=\left|v_{ij}^{\mathrm{sh}}(t_i^*)\right|,\qquad
+ t_i^*=\operatorname*{arg\,max}_t\left|v_{ii}^{\mathrm{sh}}(t)\right|.
+\end{align}
+The main cross-talk matrix uses global normalisation:
+\begin{equation}
+ X_{ij}=\frac{M_{ij}}{\displaystyle\max_{k,l}M_{kl}}.
+\end{equation}
+The denominator includes the complete matrix, including diagonal entries. This differs from normalising each row to its own diagonal. No injection-background subtraction is applied.
+
+\subsection{Display and study plots}
+The heatmap reorders both axes with \code{displayOrder}, sets the diagonal to zero and removes display position 8. The remaining axes are labelled 1--14. Recover their acquisition channels from the exported \code{displayChannels}. MAT and CSV results retain all 15 acquisition channels. The signal-peak map displays $P_{ij}$ in volts, with the same display omissions.
+
+The main heatmap uses fixed upper colour limits: $6\times10^{-3}$ at 20 ns, $2\times10^{-3}$ at 50 ns and $5\times10^{-4}$ at 200 ns. Values above the colour limit saturate visually; inspect numerical results when assessing large entries.
+
+Study plots use \code{studyCellToChannel} and normalise to the positive maximum of the selected injected channel's shaped diagonal waveform. This differs from the heatmap's global denominator. The offset view additionally applies a second-order high-pass filter whose coefficients are calculated for 500 Hz at a hard-coded 2.5 MHz sampling rate. The overlay view omits this high-pass stage. If the acquisition sample rate changes, review the historical study filter before interpreting its physical cutoff.
+
+\subsection{Capacitance fit and reference subtraction}
+For a capacitance waveform, the fitter subtracts the first sample and finds the first sample above 0.04 V (the default threshold). That sample defines $t_0$. The remaining samples are fitted with
+\begin{equation}
+ v(t)=A\left[1-\exp\left(-\frac{t-t_0}{\tau}\right)\right].
+\end{equation}
+Only $A$ and $\tau$ are fitted; $t_0$ is fixed by threshold crossing. The initial values are 5 V and $10^{-4}$ s. Positive, finite fit parameters and successful convergence are required. There is no additional fit-window selection after the threshold crossing in the current implementation.
+
+For acquisition channel $i$,
+\begin{equation}
+ C_i\,[\mathrm{pF}]=\frac{\tau_i-\tau_{0,i}}{R}\,10^{12},
+ \qquad R=9150\ \Omega\quad\text{(current default)}.
+\end{equation}
+The result is capacitance in pF, without division by strip length. A finite negative result is retained by the code, although the default plot's nonnegative vertical range can hide it. Review the numerical exports as well as the plots.
+
+A missing threshold crossing or invalid fit is recorded as NaN for that channel. Invalid tower or T0 tau makes its capacitance NaN. Missing files and malformed waveforms stop analysis instead. Fit convergence alone does not establish that the exponential model describes the measured response.
+\todo{Document the measured resistance and uncertainty, the derivation and limits of the RC model, representative fit residuals, and criteria for accepting a fitted channel.}
+
+\subsection{Geometry-component fit}
+The optional component fit models the mapped capacitances as
+\begin{equation}
+ C_m=c_{\ell}\ell_m+c_n n_m,
+\end{equation}
+where $\ell_m$ is the configured strip length in mm and $n_m$ is its coupling count. This is an unweighted two-component linear least-squares fit with no intercept and no positivity constraint. It uses finite capacitances only and requires the remaining geometry matrix to have rank two.
+
+Geometry arrays in \code{default_config.m} reproduce historical values. Disable \code{cfg.capacity.fitComponents} for a board whose geometry does not match. The plain capacitance PDF uses acquisition order with channel 8 removed; the component-fit PDF uses mapped display order with display position 8 removed. Those plots can therefore have different cell ordering.
+\todo{Provide the geometry source and explain the coupling-count model and its applicability to the measured PCB revisions.}
+
+\subsection{Expected analysis exports}
+For each tower and shaping time, cross-talk analysis writes \code{results_T4_20ns.mat}, \code{pairs_T4_20ns.csv}, the relative heatmap and the signal-peak amplitude map. Study PDFs are placed under \code{plots_ch/}.
+
+For each tower, capacitance analysis writes \code{capacity_T4.mat}, \code{capacity_T4.csv} and the plain PDF; the enabled component fit adds \code{T4_capacity_fit.csv} and its PDF. MAT results include invalid acquisition-channel indices, and the component CSV identifies cells included in the fit.
+
+Cross-talk input files must all share the same time axis. Each individual waveform loader checks finite, equal-length time/data vectors, at least three samples, increasing time and uniform sampling. These checks establish data consistency, not experimental validity.

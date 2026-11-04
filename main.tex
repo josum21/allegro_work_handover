@@ -1,0 +1,43 @@
+\documentclass[11pt,a4paper,oneside]{report}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[margin=25mm]{geometry}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx,booktabs,tabularx,longtable,array}
+\usepackage{xcolor,listings,enumitem}
+\usepackage{xurl}
+\usepackage[hidelinks]{hyperref}
+\usepackage{bookmark}
+\usepackage{titlesec}
+\titlespacing*{\chapter}{0pt}{0pt}{20pt}
+\definecolor{draftred}{HTML}{9A402D}
+\definecolor{codebg}{HTML}{F3F5F7}
+\newcommand{\todo}[1]{\par\smallskip\noindent\textcolor{draftred}{\textbf{To complete:} #1}\par\smallskip}
+\newcommand{\code}[1]{\nolinkurl{#1}}
+\setlength{\emergencystretch}{2em}
+\newcommand{\placeholder}[2]{\begin{figure}[htbp]\centering\fbox{\parbox[c][24mm][c]{0.88\linewidth}{\centering #1}}\caption{#2}\end{figure}}
+\lstset{basicstyle=\ttfamily\small,backgroundcolor=\color{codebg},breaklines=true,columns=fullflexible,keepspaces=true,showstringspaces=false,frame=single,rulecolor=\color{black!15},framesep=5pt}
+\setlist{itemsep=3pt,topsep=5pt}
+\setlength{\parskip}{5pt}
+\setlength{\parindent}{0pt}
+\setcounter{tocdepth}{1}
+\title{Experimental Technical Notes\\[8pt]\Large Technical Handover}
+\author{Zuchen Huang}
+\date{3 November 2026}
+\begin{document}
+\maketitle
+\chapter*{About this document}
+\addcontentsline{toc}{chapter}{About this document}
+This document collects technical details and practical guidance for ALLEGRO PCB evaluation. It describes how to reproduce the PCB measurements and interpret their results, including setup details and operating experience that are not captured in the analysis scripts. Its scope also includes simulations of the minimum and maximum energy deposits relevant to PCB evaluation; these will be documented in a separate chapter.
+
+For questions, corrections or clarification, please contact Zuchen Huang at \href{mailto:zuchen.huang@cern.ch}{\nolinkurl{zuchen.huang@cern.ch}}.
+\begingroup
+\small
+\setlength{\parskip}{0pt}
+\tableofcontents
+\endgroup
+\input{chapters/pcb_testing}
+\input{chapters/tbd}
+\end{document}

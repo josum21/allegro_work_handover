@@ -1,0 +1,78 @@
+\section{Configuration reference}
+\subsection{Current cross-talk entry-script settings}
+These values describe the inspected script, not a recommended preset for an unverified setup. Position, range and offset are sent directly to \code{CHANnel2:POSition}, \code{CHANnel2:RANGe} and \code{CHANnel2:OFFset}. Consult the scope command reference before translating a front-panel V/div setting into a range value.
+\begin{center}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Pair category & Position & Range & Offset \\
+\midrule
+Diagonal ($i=j$) & 0 & 5 & 0 \\
+Adjacent numbers ($|i-j|=1$) & 0 & 0.3 & 0 \\
+Other pairs & 0 & 0.1 & 0 \\
+\bottomrule
+\end{tabular}
+\end{center}
+The shared defaults differ: diagonal $(-4,5,-1.8)$, adjacent $(0,0.15,0.009)$ and other $(0,0.08,0.009)$, in position/range/offset order. The entry script overrides all nine values.
+
+\subsection{Tower maps}
+\label{sec:tower-maps}
+For towers 2, 3, 5, 7, 9, 11, 12 and 14, the current display order is
+\begin{lstlisting}
+[9, 13, 2, 5, 11, 14, 3, 8, 6, 12, 4, 10, 7, 1, 15]
+\end{lstlisting}
+and the study-cell-to-channel map is
+\begin{lstlisting}
+[9, 13, 2, 5, 11, 14, 3, 6, 12, 4, 10, 7, 1, 15, 8]
+\end{lstlisting}
+For towers 4, 6, 8, 10 and 13, display order is \code{1:15}, and the study map is \code{[1:7, 9:15, 8]}. T0 uses \code{1:15} for both maps. Other tower numbers produce an error until their mappings are added.
+
+\subsection{Multiplexer command map}
+Before selecting a pair, the acquisition routines send \code{C}. Injection channels 1--7 use \code{U 8 3} followed by \code{L 0 <channel>}; channels 8--15 use \code{L 8 3} followed by \code{L 1 <channel-8>}. Readout channels 1--7 use \code{U 8 5} followed by \code{L 6 <channel>}; channels 8--15 use \code{L 8 5} followed by \code{L 7 <channel-8>}.
+
+These commands record the implemented routing, not an independently verified connector pinout. Check \code{set_matrix_channel.m} against the real wiring after any hardware change.
+
+\subsection{Scope waveform transfer}
+\code{read_scope.m} requests \code{CHAN2:DATA:HEAD?}, then selects \code{:FORMAT ASCii} and requests \code{CHAN2:DATA?}. It interprets the first three header fields as start time, end time and sample count, constructs a linearly spaced time vector and checks the returned sample count. This command dialect and header interpretation must be checked when replacing the oscilloscope.
+
+\section{Measurement record template}
+\label{sec:record}
+Keep a completed record alongside each campaign's raw data. The following is a proposed template, not an automatically generated toolkit output.
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.33\linewidth}>{\raggedright\arraybackslash}p{0.62\linewidth}@{}}
+\toprule
+Field & Value to enter \\
+\midrule
+\endhead
+Date and operator & Date, local time/time zone, operator name. \\
+PCB and tower & Board identifier/revision, tower number, connector orientation, photograph reference. \\
+Measurement & Cross-talk, T0 capacitance or tower capacitance. \\
+Software & Toolkit revision, saved entry-script copy, MATLAB/toolbox versions, Windows and driver versions. \\
+Instruments & Model, serial number, identity response and VISA resource for matrix and scope; generator identifier. \\
+Generator & Waveform, frequency, amplitude, offset, output impedance/load convention and cabling. \\
+Scope & Input impedance/coupling, probe factor, bandwidth, trigger, timebase, sample rate, record length and CH1 settings. \\
+CH2 presets & Position, range and offset for every applicable pair category. \\
+Timing & Pre-acquisition settle time and post-acquisition read delay. \\
+Reference & T0 dataset location, acquisition time, resistance value and measurement source. \\
+Data and analysis & Data root, dataset label, overwrite/resume choice, output label, shaping times and geometry version. \\
+Observations & Diagnostic waveform paths, warnings, rejected/repeated channels, setup changes and reasons. \\
+Archive & Raw-data location, configuration record and exported-result location. \\
+\bottomrule
+\end{longtable}
+
+\section{Source notes and remaining work}
+\subsection{Local sources used for this draft}
+\begin{itemize}
+\item Historical installation note: \path{/Users/huang/workarea/Documentation/FCC/Install_GPIB_Windows.md}.
+\item Toolkit: \path{/Users/huang/cernbox/Allegro_PCB/pcb_test_toolkit}, including its README, entry scripts, configuration, acquisition, waveform-loading, shaping, fitting and analysis functions.
+\item Checkout HEAD at drafting: \code{ccf13d3ce807346d0af59ee9a0af418b9924dc9a}. The working tree had existing modifications in \code{analyze_capacity.m}, \code{default_config.m}, \code{fit_tau.m} and \code{README.md}. Descriptions refer to these inspected working files, so this commit alone does not fully identify the documented software snapshot.
+\end{itemize}
+The original toolkit and historical documentation were not modified. This document does not replace instrument manuals or a validated bench record.
+
+\subsection{Priority additions from practical experience}
+\begin{enumerate}
+\item An annotated wiring diagram, instrument inventory, connector photographs and T0 description.
+\item Verified generator and scope settings for each measurement type.
+\item Representative good and bad waveforms with explanations and acceptance criteria.
+\item Physical channel maps, the reason for omitting position/channel 8, and geometry sources.
+\item Reference-repeatability checks, resistance uncertainty and fit-quality criteria.
+\item Known bench problems with confirmed remedies, and the long-term data/software archive location.
+\end{enumerate}
