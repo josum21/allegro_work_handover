@@ -1,20 +1,18 @@
 \section{PCB under test}
 \label{sec:pcb-overview}
-The measurements described in this chapter characterise the cross-talk and capacitance of a PCB designed for the ALLEGRO barrel calorimeter (Figure~\ref{fig:pcb}). This note is based on cern PCB v2 and China PCB v1. For measurements of an endcap PCB or a different board layout, update the topology-dependent channel maps and geometry parameters in the analysis scripts before using them.
+The measurements described in this chapter characterise the cross-talk and capacitance of a PCB designed for the ALLEGRO barrel calorimeter (Figure~\ref{fig:pcb}). This note covers CERN PCB v2 and China PCB v1. For measurements of an endcap PCB or a different board layout, update the topology-dependent channel maps and geometry parameters in the analysis scripts before using them.
 
 \subsection{Tower layouts}
 The board contains 16 towers with different signal-routing layouts or structural features. Towers 1, 2, 15 and 16 explore different strip-layer sizes or positions; the other towers explore different signal-path matching and shielding arrangements. Refer to the PCB layout drawing for the detailed configuration of each tower.
 
-Each tower has a 16-pin connector. With the connector at the top of the board, the connector channels are numbered from right to left, from 1 to 16. In the logical-trace (\code{logTrac}) layout, cell 1 is the cell farthest from the connector. The channel-to-cell mapping follows the cell order, starting with channel 1 for cell 1, with channel 8 skipped. For the optimal-trace layout, use the tower-specific mappings in \code{default_config.m}; the maps currently implemented in the toolkit are listed in Section~\ref{sec:tower-maps}.
+Each tower has a 16-pin connector. Viewed from the side shown in Figure~\ref{fig:pcb}, with the connector at the top of the board, the connector pins are numbered from right to left, from 1 to 16. Pin 8 is not connected to a PCB trace. In the logical-trace (\code{logTrac}) layout, cell 1 is the cell farthest from the connector. Pins 1--7 connect to cells 1--7, and pins 9--16 connect to cells 8--15.
 
-Connector-channel numbering must be distinguished from the toolkit's acquisition-channel and display conventions described in Section~\ref{sec:channel-conventions}.
-\todo{Add an annotated connector pinout showing how all 16 connector channels correspond to the 15 acquisition channels, including the role of channel 8 and the exact cell numbering after it is skipped. Identify the viewed side of the PCB so that right-to-left numbering is unambiguous.}
+For the optimal-trace layout, use the tower-specific mappings in \code{default_config.m}; the maps currently implemented in the toolkit are listed in Section~\ref{sec:tower-maps}. Physical connector-pin numbers must be distinguished from the toolkit's acquisition-channel numbers and display positions described in Section~\ref{sec:channel-conventions}.
 
 \subsection{Scope of the measurements}
 The toolkit supports two measurements: a cross-talk matrix and a per-channel capacitance measurement. Each tower has 15 acquisition channels. A full cross-talk scan records all 225 injection/readout combinations. A capacitance scan records 15 waveforms with injection and readout routed to the same channel. Capacitance is obtained offline by comparing the fitted time constants with a separately acquired T0 reference.
 
 The multiplexer selects channels within the connected tower. It does not change the physical tower connection. The operator must reconnect the apparatus and update the tower number between towers.
-\todo{Record the board revision and add the PCB layout drawing with tower identifiers. Explain the construction and electrical meaning of the T0 reference.}
 
 \begin{figure}[p]
     \centering
@@ -26,8 +24,18 @@ The multiplexer selects channels within the connected tower. It does not change 
 \section{Measurement setup and conventions}
 \label{sec:setup}
 \subsection{Signal path and instrument roles}
-The acquisition software assumes that oscilloscope CH1 carries the direct generator reference and CH2 carries the multiplexer readout. The scripts configure and read CH2 only. CH1 and the trigger are set on the instrument by the operator. The exact generator branching, loading and connector arrangement must be documented from the bench.
-\placeholder{Insert an annotated wiring diagram and a photograph of the connected setup.}{Setup documentation to be added. Label generator output, reference branch, injection path, readout path, multiplexer connectors, tower orientation and scope inputs.}
+The acquisition software assumes that oscilloscope CH1 carries the direct generator reference and CH2 carries the multiplexer readout. The scripts configure and read CH2 only. CH1 and the trigger are set on the instrument by the operator.
+
+At IJCLab, the waveform settings are stored in the signal generator. When configuring a generator from scratch, use the settings for the relevant measurement:
+\begin{itemize}
+\item \textbf{Cross-talk:} select the built-in triangular waveform, enable \textit{burst} mode, and set the phase to $-1^\circ$, the amplitude to 1~Vpp and the frequency to 2~MHz.
+\item \textbf{Capacitance:} select the built-in square waveform and set the amplitude to 5~Vpp and the frequency to 1~MHz.
+\end{itemize}
+\todo{For cross-talk, record the burst cycle count, burst trigger source and repetition rate. For both measurements, record the generator offset and output-load setting.}
+
+Connect signal-generator CH1 directly to oscilloscope CH1 as the reference. Connect signal-generator CH2 to the multiplexer injection input, and connect the multiplexer readout output to oscilloscope CH2. For cross-talk measurements, verify the timing relationship between the two generator outputs so that CH1 provides a stable reference for the CH2 acquisition.
+
+For capacitance measurements, connect the external resistor at the signal-generator CH2 output to form an RC circuit with the capacitance under test; the IJCLab setup uses $9150~\Omega$. Set the oscilloscope CH2 input impedance to its high-impedance setting. For capacitance measurements, use oscilloscope CH2 as the trigger source: its signal amplitude is sufficient for triggering. The CH1 reference trace is not required for the capacitance analysis and may be hidden from the display.
 
 \begin{tabularx}{\linewidth}{@{}lX@{}}
 \toprule
@@ -40,7 +48,6 @@ Windows PC & VISA communication and MATLAB acquisition. \\
 Offline computer & MATLAB analysis and result export; may be separate from the acquisition PC. \\
 \bottomrule
 \end{tabularx}
-\todo{Add instrument models and serial numbers, generator waveform/frequency/amplitude/offset, termination and probe settings, scope coupling and bandwidth, sample rate, record length, time window and trigger settings. Cross-talk and capacitance may need separate setup records.}
 
 \subsection{Three channel-number conventions}
 \label{sec:channel-conventions}
