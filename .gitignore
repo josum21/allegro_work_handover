@@ -1,0 +1,15 @@
+# LaTeX build artifacts
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.toc
+
+# Generated PDF output
+/main.pdf
+/output/pdf/
+
+# macOS metadata
+.DS_Store
