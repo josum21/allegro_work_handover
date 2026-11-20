@@ -3,11 +3,10 @@
 \subsection{Prepare the measurement}
 \begin{enumerate}
 \item Identify the board, tower and measurement type. Start a campaign record using Section~\ref{sec:record} and select a new data directory.
-\item Connect the chosen tower using the verified connector orientation. Check the reference and readout paths against the wiring diagram.
+\item Connect the chosen tower. Double check if you connect only to one row of pins.
 \item Set the generator, scope inputs, horizontal acquisition settings and trigger for the measurement. Confirm the direct generator reference on CH1.
 \item Verify both VISA resources and their identities as described in Section~\ref{sec:installation}.
 \end{enumerate}
-\todo{Complete the exact connection and power/output sequence, with photographs showing connector orientation. Add separate validated generator and scope presets for cross-talk and capacitance. Until those details are added, this is an outline rather than a complete standalone bench procedure.}
 
 \subsection{Inspect one pair before a scan}
 Open \code{run_acquire_debug.m}. Set the tower, injection channel, readout channel and VISA resources. Use a diagonal pair first, then inspect an adjacent-number pair and another off-diagonal pair to assess the three cross-talk presets.
@@ -32,7 +31,7 @@ The current script uses a 0.5-second delay after confirmed acquisition and befor
 
 \subsection{Acquire capacitance and T0}
 \begin{enumerate}
-\item Configure the capacitance excitation and scope settings. Connect T0 and set \code{tower = 0} in \code{run_acquire_capacity.m}.
+\item Configure the capacitance excitation and scope settings. Use a square-wave frequency in the kHz range, with sufficient time for charging and discharging. Set the acquisition window to include a pre-rise baseline and the rising response approaching its plateau, ending before the next falling edge; the current fitter uses all samples after threshold crossing. Record the exact frequency and duty cycle. Connect T0 and set \code{tower = 0} in \code{run_acquire_capacity.m}.
 \item Choose the capacitance campaign directory and dataset label. Check the CH2 range and the overwrite/resume switch. The shared position and offset are $-4$ and 0; the entry script's range is 2.
 \item Run the script and confirm the T0 connection. It routes injection and readout to each channel in turn and saves 15 files.
 \item Connect a measurement tower, update \code{tower}, and acquire its 15 files under the same campaign root and dataset label. Record any changes to the setup between T0 and the tower.

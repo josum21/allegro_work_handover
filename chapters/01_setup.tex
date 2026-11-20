@@ -28,12 +28,42 @@ The acquisition software assumes that oscilloscope CH1 carries the direct genera
 
 At IJCLab, the waveform settings are stored in the signal generator. When configuring a generator from scratch, use the settings for the relevant measurement:
 \begin{itemize}
-\item \textbf{Cross-talk:} select the built-in triangular waveform, enable \textit{burst} mode, and set the phase to $-1^\circ$, the amplitude to 1~Vpp and the frequency to 2~MHz.
-\item \textbf{Capacitance:} select the built-in square waveform and set the amplitude to 5~Vpp and the frequency to 1~MHz.
+\item \textbf{Cross-talk:} configure both generator channels identically using the Ramp waveform and burst settings in Table~\ref{tab:xtalk-generator}. CH1 provides the reference and CH2 provides the injection signal. The waveform is an asymmetric ramp (0\% symmetry), rather than a symmetric triangular waveform.
+\item \textbf{Capacitance:} select the built-in square waveform, set the amplitude to 5~Vpp, and use a frequency in the kHz range. Choose the frequency and duty cycle so that the high and low intervals allow charging and discharging to settle.
 \end{itemize}
-\todo{For cross-talk, record the burst cycle count, burst trigger source and repetition rate. For both measurements, record the generator offset and output-load setting.}
+The cross-talk settings below are taken from the SIGLENT SDG6032X front-panel photograph in Figure~\ref{fig:xtalk-generator}. Both channels use the same settings, as confirmed by the operator. The 2.5~MHz frequency describes the ramp within a burst; the 10~ms burst period corresponds to a repetition rate of 100~Hz.
 
-Connect signal-generator CH1 directly to oscilloscope CH1 as the reference. Connect signal-generator CH2 to the multiplexer injection input, and connect the multiplexer readout output to oscilloscope CH2. For cross-talk measurements, verify the timing relationship between the two generator outputs so that CH1 provides a stable reference for the CH2 acquisition.
+\begin{table}[htbp]
+    \centering
+    \caption{Cross-talk generator settings, applied to both CH1 and CH2.}
+    \label{tab:xtalk-generator}
+    \begin{tabular}{@{}ll@{}}
+        \toprule
+        Parameter & Setting \\
+        \midrule
+        Waveform & Ramp \\
+        Frequency & 2.5~MHz \\
+        Amplitude & 5~Vpp \\
+        DC offset & 0~V \\
+        Symmetry & 0\% \\
+        Mode & Burst, N-cycle \\
+        Cycles per burst & 1 \\
+        Burst start phase & $-1^\circ$ \\
+        Burst source & Internal \\
+        Burst period & 10~ms (100~Hz repetition rate) \\
+        Generator load setting & HiZ \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.90\linewidth]{figures/xtalk_generator_settings.jpg}
+    \caption{SIGLENT SDG6032X settings used for cross-talk measurements. The photograph shows the outputs switched off; enable both outputs for acquisition. HiZ is the generator's load setting and does not specify the oscilloscope input termination.}
+    \label{fig:xtalk-generator}
+\end{figure}
+
+Connect signal-generator CH1 directly to oscilloscope CH1 as the reference. Connect signal-generator CH2 to the multiplexer injection input, and connect the multiplexer readout output to oscilloscope CH2. For cross-talk measurements, both generator channels use the settings in Table~\ref{tab:xtalk-generator}. Verify that the reference and injection bursts remain aligned in time so that oscilloscope CH1 provides a stable timing reference. 
 
 For capacitance measurements, connect the external resistor at the signal-generator CH2 output to form an RC circuit with the capacitance under test; the IJCLab setup uses $9150~\Omega$. Set the oscilloscope CH2 input impedance to its high-impedance setting. For capacitance measurements, use oscilloscope CH2 as the trigger source: its signal amplitude is sufficient for triggering. The CH1 reference trace is not required for the capacitance analysis and may be hidden from the display.
 
@@ -58,4 +88,4 @@ The cross-talk scan's adjacent-pair preset is selected by
  |i-j|=1,
 \]
 where $i$ and $j$ are acquisition-channel numbers. This condition alone does not establish physical adjacency on the PCB.
-\todo{Complete the connector-to-acquisition-channel map introduced in Section~\ref{sec:pcb-overview}, explain why display position 8 is omitted, and identify physical neighbours for each board layout.}
+
